@@ -4,11 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 )
 
 // Chess board size
 const size = 8
+
+type Data struct {
+	Board [][]int
+	Count int
+}
 
 // Knight move offsets
 var offsets = [][]int{
@@ -20,139 +26,92 @@ var offsets = [][]int{
 
 // Check if move is valid on board
 func validMove(x, y int) bool {
-
 	return x >= 0 && x < size && y >= 0 && y < size
-
 }
 
-// Get all valid knight moves from position (x,y)
 func getKnightMoves(x, y int) ([][]int, int) {
-
 	var moves [][]int
-	count := 0
-
+	outputCount := 0
 	for _, offset := range offsets {
 		x1 := x + offset[0]
 		y1 := y + offset[1]
 		if validMove(x1, y1) {
 			moves = append(moves, []int{x1, y1})
-			count++
+			outputCount++
 		}
 	}
-
-	return moves, count
+	return moves, outputCount
+	//return Data{
+	//	Board: moves,
+	//	Count: outputCount,
+	//}
 }
 
-func getBestMove(x, y int) []int {
+func bestMove(searchlist [][]int) {
 
-	// Get initial moves
-	moves, _ := getKnightMoves(x, y)
+	//bestMove := []Data{}
+	var posibleMoves [][]int
+	cellCount := 0
 
-	// Track best move and smallest count
-	var bestMove []int
-	minCount := size * size
-
-	// Check each initial move
-	for _, m := range moves {
-
-		// Get subsequent moves
-		movesCount, _ := getKnightMoves(m[0], m[1])
-
-		// Update if smaller count
-		if len(movesCount) < minCount {
-			bestMove = m
-			minCount = len(movesCount)
-		}
+	for _, move := range searchlist {
+		//bestMove = getKnightMoves()
+		posibleMoves, cellCount = getKnightMoves(move[0], move[1])
+		//fmt.Println("searchlist", getKnightMoves(move[0], move[1]))
+		//posibleMoves = append(posibleMoves, getKnightMoves(move[0], move[1]))
+		fmt.Println("posibleMoves", posibleMoves, "\n", "cellCount", cellCount)
 	}
-
-	return bestMove
 }
 
-func ReadInput() (x int, y int) {
+func ReadInput() (int, int, error) {
 
 	reader := bufio.NewReader(os.Stdin)
+
 	for {
-		fmt.Print("Enter X and Y Coordinates (comma-separated): ")
-		input, _ := reader.ReadString('\n')
-
-		// Remove leading/trailing whitespace and split input by comma
-		coordinates := strings.Split(strings.TrimSpace(input), ",")
-
-		if len(coordinates) != 2 {
-			fmt.Println("Please enter two coordinates separated by a comma.")
-			continue // Loop back to the beginning
+		fmt.Print("Enter x,y: ")
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return 0, 0, err
 		}
 
-		x := strings.TrimSpace(coordinates[0])
-		y := strings.TrimSpace(coordinates[1])
+		input = strings.TrimSpace(input)
+		coords := strings.Split(input, ",")
 
-		fmt.Printf("X Coordinate: %s\n", x)
-		fmt.Printf("Y Coordinate: %s\n", y)
+		if len(coords) != 2 {
+			fmt.Println("Invalid input. Please enter x,y")
+			continue
+		}
 
-		// If you want to exit the loop after successfully getting valid input, you can break here.
-		break
+		x, err := strconv.Atoi(coords[0])
+		if err != nil {
+			return 0, 0, err
+		}
+
+		y, err := strconv.Atoi(coords[1])
+		if err != nil {
+			return 0, 0, err
+		}
+
+		return x, y, nil
 	}
-	// Returns x and y coordinates as integers
-	return
-
 }
+
 func main() {
 
-	var board [8][8]int
+	//var board [8][8]int
 	//var moves [][]int
-	var x, y = ReadInput()
-	var nextMove []int
-	count := 1
-	board[x][y] = count
-	getKnightMoves(x, y)
-	fmt.Println(nextMove)
-	moves1, movesCount := getKnightMoves(x, y)
-	fmt.Println(moves1)
-	fmt.Println("Moves Count: ", movesCount)
-	//fmt.Println(getBestMove(x, y))
-	//fmt.Println(getBestMove(x, y))
-	// var counter int = 1
-	// var x, y string
-	// fmt.Printf("%T\n", x)
-	// fmt.Printf("%T\n", y)
-
-	// // Ininite coordinates
-	// for k := 2; k < 65; k++ {
-
-	// }
-
-	// x, y := 0, 0
-
-	// for count <= 64 {
-
-	// 	// Get best move
-	// 	move := getBestMove(x, y)
-	// 	fmt.Println(move)
-
-	// 	// Mark move on board
-	// 	board[move[0]][move[1]] = count
-
-	// 	// Update current position
-	// 	x, y = move[0], move[1]
-
-	// 	count++
-	// }
-
-	// moves, count := getKnightMoves(x, y)
-	// fmt.Println(moves)
-	// fmt.Println("Number of possible moves:", count)
-
-	// move := getBestMove(x, y)
-	// fmt.Println(move)
-
-	// for i := 0; i < 8; i++ {
-
-	// 	for j := 0; j < 8; j++ {
-
-	// 		// Print cell with width of 3, right aligned
-	// 		fmt.Printf(" %3d", board[i][j])
-	// 	}
-	// 	fmt.Println("")
-	// }
-
+	var x, y, err = ReadInput()
+	if err != nil {
+		fmt.Println("Invalid input. Please enter x,y")
+	}
+	moves, count := getKnightMoves(x, y)
+	//data := getKnightMoves(x, y)
+	//moves := data.Board
+	//count := data.Count
+	fmt.Println("All Moves: ", moves, "\nAll Count", count)
+	fmt.Println("**************************")
+	bestMove(moves)
+	//for _, i := range moves {
+	//	fmt.Println("Move: ", i)
+	//	fmt.Print(" 0: ", i[0], " 1: ", i[1], "\n")
+	//}
 }
