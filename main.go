@@ -11,10 +11,16 @@ import (
 // Chess board size
 const size = 8
 
-// type Data struct {
-// 	Board [][]int
-// 	Count int
-// }
+// Boolean board to track chosen squares
+// at the beginning all of these are false
+var validBoard [8][8]bool
+
+type DecisonTree struct {
+	coordinates [][]int
+	Count       int
+	InsertedX   int
+	InsertedY   int
+}
 
 // Knight move offsets
 var offsets = [][]int{
@@ -24,43 +30,97 @@ var offsets = [][]int{
 	{2, 1}, {2, -1},
 }
 
+// func InithializeValidations() {
+// 	for i := 0; i < 8; i++ {
+// 		for j := 0; j < 8; j++ {
+// 			validBoard[i][j] = true
+// 		}
+// 	}
+// }
+
 // Check if move is valid on board
 func validMove(x, y int) bool {
+
 	return x >= 0 && x < size && y >= 0 && y < size
 }
 
-func getKnightMoves(x, y int) ([][]int, int) {
+func getKnightMoves(x, y int) [][]int {
+
 	var moves [][]int
-	//outputCount := 0
+
 	for _, offset := range offsets {
 		x1 := x + offset[0]
 		y1 := y + offset[1]
 		if validMove(x1, y1) {
 			moves = append(moves, []int{x1, y1})
-			//outputCount++
 		}
 	}
-	return moves, len(moves) //outputCount
+
+	return moves
 }
 
-func bestMove(searchlist [][]int, moveCount int) [][]int {
+func bestMove(searchlist [][]int) (int, int) {
 
 	//bestMove := []Data{}
-	var posibleMoves [][]int
+	//var posibbleMoves [][]int
 	//cellCount := 0
+	var decisionTrees []DecisonTree
 
-	//for _, move := range searchlist {
-	//bestMove = getKnightMoves()
-	//outputCounter := 8
-	//posibleMoves, cellCount = getKnightMoves(move[0], move[1])
-	//fmt.Println("searchlist", getKnightMoves(move[0], move[1]))
-	//posibleMoves = append(posibleMoves, getKnightMoves(move[0], move[1]))
-	//fmt.Println("posibleMoves", posibleMoves, "\n", "cellCount", cellCount)
-	//}
+	for _, move := range searchlist {
+		//bestMove = getKnightMoves(move[0], move[1])
+		//outputCounter := 8
+		//posibbleMoves = getKnightMoves(move[0], move[1])
+		move1 := getKnightMoves(move[0], move[1])
+		newTree := DecisonTree{
+			coordinates: move1,
+			Count:       len(move1),
+			InsertedX:   move[0],
+			InsertedY:   move[1],
+		}
 
-	//fmt.Println("Best move Result:\n", "Possible moves: ", posibleMoves, "cellCount", cellCount)
+		//tempPosibbleMoves := DecisonTree{}
 
-	return posibleMoves
+		// tempPosibbleMoves.coordinates = append(tempPosibbleMoves.coordinates, move1...)
+		// tempPosibbleMoves.Count = len(move1)
+
+		//fmt.Println("Possible moves for", move[0], ", ", move[1], " : ", getKnightMoves(move[0], move[1]))
+		//posibleMoves = append(posibleMoves, getKnightMoves(move[0], move[1]))
+		//fmt.Println("posibleMoves", posibleMoves, "\n", "cellCount", cellCount)
+
+		//fmt.Println("possiblemoves", newTree)
+
+		decisionTrees = append(decisionTrees, newTree)
+
+	}
+	// todo : this is for find next move by lowest output to other cells
+	// * sdfsdf ffdsfsdf
+	// ? what is this
+	// ! check this
+	var lowest DecisonTree
+	for _, tree := range decisionTrees {
+		if (lowest.Count == 0 || tree.Count < lowest.Count) && (validBoard[lowest.InsertedX][lowest.InsertedY] == false) {
+			fmt.Println("our condition is ", (lowest.Count == 0 || tree.Count < lowest.Count) && (validBoard[lowest.InsertedX][lowest.InsertedY] == false))
+			lowest = tree
+			validBoard[lowest.InsertedX][lowest.InsertedY] = true
+		}
+	}
+	// ! check this
+
+	// fmt.Println("Lowest Count:", lowest.Count)
+	// fmt.Println("Coordinates:", lowest.coordinates)
+	fmt.Println("Lowest is :", lowest)
+	fmt.Println("Chosen Coordinates(x, y)(from bestmove function):", lowest.InsertedX, ", ", lowest.InsertedY)
+
+	// fmt.Println("****************************************************************")
+	// //fmt.Println("Best move Result:\n", "Possible moves: ", posibleMoves, "cellCount", cellCount)
+	// Todo : this is for printing the decisiontrees slice in seperated lines
+	// for _, tree := range decisionTrees {
+	// 	fmt.Println("Possible Moves:", tree.coordinates)
+	// 	fmt.Println("Count final:", tree.Count)
+	// 	fmt.Println("x:", tree.InsertedX, "y:", tree.InsertedY)
+	// }
+	// "Chosen Coordinates(x, y):", lowest.InsertedX, ", ", lowest.InsertedY)
+	return lowest.InsertedX, lowest.InsertedY
 }
 
 func ReadInput() (int, int, error) {
@@ -104,28 +164,54 @@ func ReadInput() (int, int, error) {
 func main() {
 
 	var board [8][8]int
-	//var moves [][]int
-	level := 2
+	level := 1
 
-	var x, y, err = ReadInput()
+	// Starting position
+	var startX, startY, err = ReadInput()
 	if err != nil {
 		fmt.Println("Invalid input(from main funciotn). Please valid enter x,y")
 	}
 
-	board[x][y] = level
+	board[startX][startY] = level
+	validBoard[startX][startY] = true
 
-	// for i := 2; i <= 64; i++ {
-	moves, movesCount := getKnightMoves(x, y)
-	//bestMove(moves)
-	fmt.Println("All knight moves are: ", moves, "Moves Count:", movesCount)
-	// 	fmt.Println("i: ", i)
+	// moves := getKnightMoves(startX, startY)
+	// bestMove(moves)
+	// fmt.Println("All knight moves are: ", moves, "Moves Count:", len((moves)))
 
-	// }
-	// TODO: print board to console
-	// for i := 0; i < 8; i++ {
-	// 	for j := 0; j < 8; j++ {
+	fmt.Println("****************************************************************")
 
-	// }
+	for i := 1; i < 10; i++ {
+
+		track := getKnightMoves(startX, startY)
+		fmt.Println("next possible moves for starting from(from main): ", startX, ", ", startY)
+		fmt.Println("Tracked cells that one of them is valid", track)
+
+		// Get next best move
+		nextX, nextY := bestMove(track)
+		fmt.Println("next best move: ", nextX, ", ", nextY)
+
+		// Update board with move and new level
+		level++
+		board[nextX][nextY] = level
+
+		// Print updated board
+		//printBoard(board)
+
+		// Set start to new position
+		startX = nextX
+		startY = nextY
+	}
+
+	for x := 0; x < size; x++ {
+		for y := 0; y < size; y++ {
+			fmt.Printf("%3d ", board[x][y])
+
+		}
+		fmt.Println()
+		fmt.Println()
+	}
+
 }
 
 //data := getKnightMoves(x, y)
