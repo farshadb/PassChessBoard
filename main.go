@@ -167,11 +167,10 @@ func contains(x, y int) bool {
 			}
 		}
 	}
-
 	return false
 }
 
-func findMissingNumbers(board [8][8]int) []int {
+func findMissingNumbers(board [size][size]int) []int {
 	// Create a set to store the numbers in the board.
 	numbers := make(map[int]struct{})
 	for _, row := range board {
@@ -195,10 +194,12 @@ func findMissingNumbers(board [8][8]int) []int {
 
 func main() {
 
-	var board [8][8]int
+	var board [size][size]int
 	level := 1
 
 	// Starting position
+	// Todo: read size from input and modify related functions
+
 	var startX, startY, err = ReadInput()
 	if err != nil {
 		fmt.Println("Invalid input(from main funciotn). Please valid enter x,y")
@@ -209,7 +210,7 @@ func main() {
 	board[startX][startY] = level
 	addToVisited(startX, startY)
 
-	for i := 1; i < 64; i++ {
+	for i := 1; i < (size * size); i++ {
 
 		track := getKnightMoves(startX, startY)
 
@@ -229,7 +230,7 @@ func main() {
 
 	for x := 0; x < size; x++ {
 		for y := 0; y < size; y++ {
-			fmt.Printf("%3d ", board[x][y])
+			fmt.Printf("%6d ", board[x][y])
 
 		}
 		fmt.Println()
