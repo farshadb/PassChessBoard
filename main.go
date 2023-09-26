@@ -3,7 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -11,9 +13,7 @@ import (
 // Chess board size
 const size = 8
 
-// Boolean board to track chosen squares
-// at the beginning all of these are false
-var validBoard [8][8]bool
+var visited = make(map[int][]int)
 
 type DecisonTree struct {
 	coordinates [][]int
@@ -29,14 +29,6 @@ var offsets = [][]int{
 	{1, 2}, {1, -2},
 	{2, 1}, {2, -1},
 }
-
-// func InithializeValidations() {
-// 	for i := 0; i < 8; i++ {
-// 		for j := 0; j < 8; j++ {
-// 			validBoard[i][j] = true
-// 		}
-// 	}
-// }
 
 // Check if move is valid on board
 func validMove(x, y int) bool {
@@ -61,15 +53,11 @@ func getKnightMoves(x, y int) [][]int {
 
 func bestMove(searchlist [][]int) (int, int) {
 
-	//bestMove := []Data{}
-	//var posibbleMoves [][]int
-	//cellCount := 0
+	i := 1
 	var decisionTrees []DecisonTree
 
 	for _, move := range searchlist {
-		//bestMove = getKnightMoves(move[0], move[1])
-		//outputCounter := 8
-		//posibbleMoves = getKnightMoves(move[0], move[1])
+
 		move1 := getKnightMoves(move[0], move[1])
 		newTree := DecisonTree{
 			coordinates: move1,
@@ -92,24 +80,33 @@ func bestMove(searchlist [][]int) (int, int) {
 		decisionTrees = append(decisionTrees, newTree)
 
 	}
-	// todo : this is for find next move by lowest output to other cells
-	// * sdfsdf ffdsfsdf
-	// ? what is this
-	// ! check this
-	var lowest DecisonTree
-	for _, tree := range decisionTrees {
-		if (lowest.Count == 0 || tree.Count < lowest.Count) && (validBoard[lowest.InsertedX][lowest.InsertedY] == false) {
-			fmt.Println("our condition is ", (lowest.Count == 0 || tree.Count < lowest.Count) && (validBoard[lowest.InsertedX][lowest.InsertedY] == false))
-			lowest = tree
-			validBoard[lowest.InsertedX][lowest.InsertedY] = true
-		}
+	// * check this
+
+	for _, fighter := range decisionTrees {
+		fmt.Printf("%v %v %v %v\n", fighter.coordinates, fighter.Count, fighter.InsertedX, fighter.InsertedY)
+
 	}
+
+	// todo : this is for find next move by lowest output to other cells
+	// ? what is this
+
+	fmt.Println(lowestFinder(decisionTrees))
+	fmt.Println("function lowestFinder called for ", i, "st times")
+	i++
+	x, y := lowestFinder(decisionTrees)
+	fmt.Println()
+	fmt.Println("----------------------------------")
+	fmt.Println(visited)
+	fmt.Println("----------------------------------")
+	fmt.Println("Recieved next move", x, ", ", y)
+	fmt.Println()
 	// ! check this
 
 	// fmt.Println("Lowest Count:", lowest.Count)
 	// fmt.Println("Coordinates:", lowest.coordinates)
-	fmt.Println("Lowest is :", lowest)
-	fmt.Println("Chosen Coordinates(x, y)(from bestmove function):", lowest.InsertedX, ", ", lowest.InsertedY)
+	// !
+	// fmt.Println("func bestmove\n", "Lowest is :", lowest)
+	// fmt.Println("Chosen Coordinates(x, y)(from bestmove function):", lowest.InsertedX, ", ", lowest.InsertedY)
 
 	// fmt.Println("****************************************************************")
 	// //fmt.Println("Best move Result:\n", "Possible moves: ", posibleMoves, "cellCount", cellCount)
@@ -119,8 +116,10 @@ func bestMove(searchlist [][]int) (int, int) {
 	// 	fmt.Println("Count final:", tree.Count)
 	// 	fmt.Println("x:", tree.InsertedX, "y:", tree.InsertedY)
 	// }
+	//fmt.Println("**************************************************************** done")
 	// "Chosen Coordinates(x, y):", lowest.InsertedX, ", ", lowest.InsertedY)
-	return lowest.InsertedX, lowest.InsertedY
+
+	return x, y
 }
 
 func ReadInput() (int, int, error) {
@@ -157,8 +156,83 @@ func ReadInput() (int, int, error) {
 		// 	fmt.Println("Invalid inpute. Please enter valid nmber between 0 and 7")
 		// 	continue
 		// }
+		//fmt.Println("from func inputreader: ", x, ", ", y)
 		return x, y, nil
 	}
+}
+
+func lowestFinder(coords []DecisonTree) (int, int) {
+
+	if len(coords) == 0 {
+
+		fmt.Println("you have problem in you given data(form func lowestFinder)")
+		return 0, 0
+	}
+
+	smallest := coords[0]
+	for _, item := range coords {
+		fmt.Println("\ncheking ", item.InsertedX, ", ", item.InsertedY)
+		if !contains(item.InsertedX, item.InsertedY) {
+			fmt.Println("+++++++++++++++++++++++++++++++++++")
+			fmt.Println(item.InsertedX, ", ", item.InsertedY, " Is not in visited")
+			fmt.Println(visited)
+			fmt.Println("+++++++++++++++++++++++++++++++++++")
+			// ! fmt.Println(item.InsertedX, " ", item.InsertedY, " is not visited")
+			if item.Count <= smallest.Count {
+				fmt.Println(item.InsertedX, ", ", item.InsertedY, " with output count ", item.Count, " is chosen")
+				smallest = item
+			}
+		}
+		if contains(smallest.InsertedX, smallest.InsertedY) {
+			sorted := make([]DecisonTree, len(coords))
+			copy(sorted, coords)
+
+			// Sort copy
+			sort.Slice(sorted, func(i, j int) bool {
+				return sorted[i].Count < sorted[j].Count
+			})
+
+			// Find first not visited
+			for _, s := range sorted {
+				if !contains(s.InsertedX, s.InsertedY) {
+					fmt.Println("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\")
+					fmt.Println(s)
+					fmt.Println("\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\")
+					fmt.Println()
+
+					smallest = s
+				}
+			}
+
+		}
+	}
+
+	fmt.Println("lowest count(from func lowestfinder): ", smallest.Count)
+	// fmt.Println("*****************************")
+	// fmt.Println()
+	fmt.Println("Neeeext moves are: ", smallest.InsertedX, ", ", smallest.InsertedY)
+	fmt.Println("end of lowestfinder functoin\n")
+	return smallest.InsertedX, smallest.InsertedY
+}
+
+func addToVisited(x, y int) {
+	if !contains(x, y) {
+		fmt.Println("=============================================================")
+		fmt.Println(x, ", ", y, " Aded to visited")
+		fmt.Println("=============================================================")
+
+		visited[x] = []int{x, y}
+	}
+}
+
+func contains(x, y int) bool {
+	for _, c := range visited {
+		if c[0] == x && c[1] == y {
+			return true
+		}
+	}
+
+	return false
 }
 
 func main() {
@@ -170,22 +244,60 @@ func main() {
 	var startX, startY, err = ReadInput()
 	if err != nil {
 		fmt.Println("Invalid input(from main funciotn). Please valid enter x,y")
+		log.Fatal(err)
+
 	}
 
 	board[startX][startY] = level
-	validBoard[startX][startY] = true
+	addToVisited(startX, startY)
 
+	fmt.Println("----------------------------------")
+	fmt.Println(visited)
+	fmt.Println("----------------------------------")
+
+	fmt.Println()
+	fmt.Println("#########")
+	fmt.Println("\n", startX, ", ", startY, " changed to visited")
+	fmt.Println(visited)
+	fmt.Println()
+
+	for x := 0; x < size; x++ {
+		for y := 0; y < size; y++ {
+			fmt.Printf("%3d ", board[x][y])
+
+		}
+		fmt.Println()
+	}
+	fmt.Println("**************************")
+	fmt.Println("")
+
+	// !
 	// moves := getKnightMoves(startX, startY)
 	// bestMove(moves)
 	// fmt.Println("All knight moves are: ", moves, "Moves Count:", len((moves)))
 
-	fmt.Println("****************************************************************")
+	//next := []DecisonTree{}
+	//next = bestMove(moves)
+	// !
+	// for _, next := range next {
+	// 	fmt.Println("Possible Moves:", next.coordinates)
+	// 	fmt.Println("Count final:", next.Count)
+	// 	fmt.Println("x:", next.InsertedX, "y:", next.InsertedY)
+	// }
+	// fmt.Println("**************************************************************** done")
 
-	for i := 1; i < 10; i++ {
+	// for _, next := range next {
+	// 	fmt.Printf("%v %v %v %v\n", next.coordinates, next.Count, next.InsertedX, next.InsertedY)
+
+	// }
+
+	// ! ****************************************************************
+
+	for i := 1; i < 64; i++ {
 
 		track := getKnightMoves(startX, startY)
-		fmt.Println("next possible moves for starting from(from main): ", startX, ", ", startY)
-		fmt.Println("Tracked cells that one of them is valid", track)
+		fmt.Println(i, " : next possible moves for starting from(from main): ", startX, ", ", startY)
+		fmt.Println("Tracked cells that one of them ", track)
 
 		// Get next best move
 		nextX, nextY := bestMove(track)
@@ -194,13 +306,32 @@ func main() {
 		// Update board with move and new level
 		level++
 		board[nextX][nextY] = level
+		addToVisited(nextX, nextY)
 
+		fmt.Println("----------------------------------")
+		fmt.Println(visited)
+		fmt.Println("----------------------------------")
+
+		fmt.Println("\n", nextX, ", ", nextY, " changed to visited\n")
+		fmt.Println(visited)
+		fmt.Println()
 		// Print updated board
 		//printBoard(board)
 
 		// Set start to new position
 		startX = nextX
 		startY = nextY
+
+		for x := 0; x < size; x++ {
+			for y := 0; y < size; y++ {
+				fmt.Printf("%3d ", board[x][y])
+
+			}
+			fmt.Println()
+		}
+		fmt.Println("**************************")
+		fmt.Println("")
+
 	}
 
 	for x := 0; x < size; x++ {
@@ -208,7 +339,6 @@ func main() {
 			fmt.Printf("%3d ", board[x][y])
 
 		}
-		fmt.Println()
 		fmt.Println()
 	}
 
