@@ -1,1 +1,1 @@
-# PassChessBoard
+# Knight's tour
