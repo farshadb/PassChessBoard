@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 )
 
 // Chess board size
+// Todo: should reconsider decaling variables and try to decrease them and use goroutines as much and as reasonably as possible.
+
 const size = 8
 
 var visited = make(map[int][][]int)
@@ -53,7 +56,6 @@ func getKnightMoves(x, y int) [][]int {
 
 func bestMove(searchlist [][]int) (int, int) {
 
-	i := 1
 	var decisionTrees []DecisonTree
 
 	for _, move := range searchlist {
@@ -69,9 +71,7 @@ func bestMove(searchlist [][]int) (int, int) {
 		decisionTrees = append(decisionTrees, newTree)
 
 	}
-	// * check this
 
-	i++
 	x, y := lowestFinder(decisionTrees)
 
 	return x, y
@@ -82,7 +82,7 @@ func ReadInput() (int, int, error) {
 	reader := bufio.NewReader(os.Stdin)
 
 	for {
-		fmt.Print("Enter x,y: ")
+		fmt.Print("Enter x,y from 0 to ", size, " : ")
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			return 0, 0, err
@@ -92,7 +92,7 @@ func ReadInput() (int, int, error) {
 		coords := strings.Split(input, ",")
 
 		if len(coords) != 2 {
-			fmt.Println("Invalid input. Please enter x,y")
+			fmt.Println("Invalid input. Please Enter x,y from 0 to ", size, " : ")
 			continue
 		}
 
@@ -145,14 +145,6 @@ func lowestFinder(coords []DecisonTree) (int, int) {
 	return smallest.InsertedX, smallest.InsertedY
 }
 
-func emptyValidCell(nextMin []DecisonTree) []DecisonTree {
-
-	min := nextMin
-
-	return min
-
-}
-
 func addToVisited(x, y int) {
 	if !contains(x, y) {
 		visited[x] = append(visited[x], []int{x, y})
@@ -202,7 +194,7 @@ func main() {
 
 	var startX, startY, err = ReadInput()
 	if err != nil {
-		fmt.Println("Invalid input(from main funciotn). Please valid enter x,y")
+		fmt.Println("Invalid input(from main funciotn). Please Enter x,y from 0 to ", size, " : ")
 		log.Fatal(err)
 
 	}
@@ -237,5 +229,9 @@ func main() {
 	}
 
 	findMissingNumbers(board)
+	fmt.Print("You are using ", runtime.Compiler, " ")
+	fmt.Println("on a", runtime.GOARCH, "machine")
+	fmt.Println("Using Go version", runtime.Version())
+	fmt.Printf("GOMAXPROCS: %d\n", runtime.GOMAXPROCS(0))
 
 }
